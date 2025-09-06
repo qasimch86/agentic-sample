@@ -16,7 +16,7 @@ jobs:
           host: ${{ secrets.SERVER_IP }}
           username: ${{ secrets.SERVER_USER }}
           key: ${{ secrets.SERVER_SSH_KEY }}
-          port: ${{ secrets.SERVER_PORT }}
+          port: 2222
           source: .
           target: /home/appuser/agentic-sample
       - name: Deploy with Docker Compose
@@ -25,7 +25,7 @@ jobs:
           host: ${{ secrets.SERVER_IP }}
           username: ${{ secrets.SERVER_USER }}
           key: ${{ secrets.SERVER_SSH_KEY }}
-          port: ${{ secrets.SERVER_PORT }}
+          port: 2222
           script: |
             cd /home/appuser/agentic-sample
             docker-compose down
