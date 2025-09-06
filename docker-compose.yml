@@ -8,7 +8,5 @@ services:
     - "8002:8002"
     environment:
       - FLASK_ENV=production
-    volumes:
-      - .:/app
-    command: python app.py
+    command: /app/.venv/bin/python app.py
 # >>> LLM-COMPOSE: END
