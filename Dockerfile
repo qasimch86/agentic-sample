@@ -14,7 +14,7 @@ RUN python -m venv /app/.venv
 RUN /bin/bash -c "source /app/.venv/bin/activate && pip install --upgrade pip && pip install -r requirements-minimal.txt"
 
 # Expose port
-EXPOSE 8001
+EXPOSE 8002
 
 # Default command
 CMD ["/app/.venv/bin/python", "app.py"]
