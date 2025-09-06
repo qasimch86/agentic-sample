@@ -1,0 +1,6 @@
+Output HTML ONLY (no Markdown/comments).
+Input JSON: {"title":"", "sections":int, "emphasis":["bold","italic"]}
+If title is non-empty -> <h1>title</h1>; else no <h1>.
+Emit exactly sections blocks: <h2>Section {i}</h2><p>One short paragraph.</p>
+If "bold" present -> wrap one keyword in <strong>; if "italic" -> wrap a short phrase in <em>.
+No other HTML (no images/scripts). Return only the fragment.

@@ -1,0 +1,8 @@
+Output HTML ONLY (no comments).
+Input JSON: {"topic":""}
+Emit exactly:
+<div class="mermaid">
+flowchart TD
+...nodes and edges for the topic (5–8 nodes)...
+</div>
+If topic is empty, infer from the user text. No text outside the div.

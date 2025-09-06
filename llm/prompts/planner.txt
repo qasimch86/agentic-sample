@@ -1,0 +1,16 @@
+Return ONLY valid JSON per this schema:
+{"tasks":[
+  {"id":"task_1","kind":"table","params":{"rows":int,"cols":int,"title":"optional string"}},
+  {"id":"task_2","kind":"list","params":{"ordered":bool,"count":int,"topic":"optional string"}},
+  {"id":"task_3","kind":"formatting","params":{"title":"optional string","sections":int,"emphasis":["bold","italic"]}},
+  {"id":"task_4","kind":"flow_chart","params":{"topic":"string"}}
+],
+"before_text":"optional string","after_text":"optional string"}
+
+Rules:
+- Detect only these kinds: table, list, formatting, flow_chart.
+- Parse sizes like “5 by 3”, “5x3”, “5 × 3”.
+- Defaults: table 3x3; list count 5 (ordered if user says numbered/ordered else false);
+  formatting sections 2 with ["bold","italic"]; flow_chart topic from user or "Process".
+- before_text/after_text: less than 25 words each.
+No prose outside the JSON.

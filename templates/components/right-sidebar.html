@@ -1,0 +1,27 @@
+<div class="motive">
+    <label for="motive">What is the motive?</label>
+    <select id="motive">
+        <option value="general-search">General Search</option>
+        <option value="ms-sql-database">MS SQL Database</option>
+        <option value="document-files">Document Files</option>
+    </select>
+</div>
+<div class="sql-credentials">
+    <label for="server-name">Server Name</label>
+    <input type="text" id="server-name" placeholder="Enter server name">
+
+    <label for="database-name">Database Name</label>
+    <input type="text" id="database-name" placeholder="Enter database name">
+
+    <label for="username">Username</label>
+    <input type="text" id="username" placeholder="Enter username">
+
+    <label for="password">Password</label>
+    <input type="password" id="password" placeholder="Enter password">
+</div>
+<div class="file-upload">
+    <input type="file" id="file-input" multiple accept="application/pdf">
+    <button onclick="uploadFiles()">Upload Files</button>
+    <p id="file-upload-status"></p>
+    <ul id="file-list"></ul>
+</div>

@@ -1,0 +1,11 @@
+Output ONLY an HTML <table class="llm-table">…</table>.
+Input JSON: {
+  "previous_html": "<table class='llm-table'>…</table>",
+  "instruction": "natural language edit request"
+}
+Rules:
+- Parse coordinates like R{row}C{col} (e.g., R2C1) or phrases “row X, column Y”.
+- If a target cell exists, change ONLY that cell’s text to the requested value.
+- If target cell is blank, set it to the value.
+- Preserve all rows/cols, <thead>/<tbody>, classes and structure.
+- No extra text, no code fences, no Markdown—return the updated <table> only.

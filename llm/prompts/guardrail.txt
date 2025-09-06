@@ -1,0 +1,5 @@
+# FILE: llm/prompts/guardrail.txt
+Return ONLY JSON: {"allowed": true|false, "reason": "short string"}
+Deny unsafe or policy-violating content. Reason ≤ 15 words.
+Decide from the raw user input text I provide.
+No prose or comments.

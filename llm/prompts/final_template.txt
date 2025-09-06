@@ -1,0 +1,7 @@
+Return ONLY JSON with this shape:
+{"final_template":"{artifacts}"}
+Rules:
+- Use "{artifacts}" exactly once.
+- Do NOT duplicate or omit any variable.
+- Do NOT add wrappers unless the user asked for layout.
+No prose or comments.

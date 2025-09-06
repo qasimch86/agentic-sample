@@ -1,0 +1,24 @@
+    <div class="chat-box">
+        <div class="chat-card user-card">
+            <div class="chat-header">User</div>
+            <p>Hello!</p>
+        </div>
+        <div class="chat-card bot-card">
+            <!-- <div class="chat-header">Bot</div> -->
+            <p>Hi there! The bot is not properly configured. Please try again later.</p>
+        </div>
+    </div>
+    <div class="attached-file" id="attached-file"></div>
+    <div class="chat-input">
+        <textarea id="chat-textarea" placeholder="Type your message here..." maxlength="3000"></textarea>
+        <div class="char-counter" id="char-counter">3000 characters remaining</div>
+        <div class="input-actions">
+            <div class="attach-container">
+                <label for="attach-file" class="attach-icon">📎</label>
+                <input type="file" id="attach-file" style="display: none;" onchange="showAttachedFile()">
+            </div>
+            <div class="send-button">
+                <button id="send-btn">Send</button>
+            </div>
+        </div>
+    </div>

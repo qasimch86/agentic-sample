@@ -1,0 +1,40 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>AI Chatbot</title>
+    <link rel="icon" type="image/png" href="/static/favicon.png">
+    <link rel="stylesheet" href="/static/css/styles.css">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.css">
+    <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.js"></script>
+    <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/contrib/auto-render.min.js"
+            onload="renderMathInElement(document.body);"></script>
+</head>
+<body>
+    <div class="index-container">
+        <header id="header"></header>
+        <main>
+            <aside class="recent-chats" id="recent-chats"></aside>
+            <section class="chat-area" id="chat-area"></section>
+            <div class="right-sidebar" id="right-sidebar"></div>
+        </main>
+    </div>
+    <script src="/static/js/main.js?v=1"></script>
+    <script src="/static/js/script.js?v=1"></script>
+
+    <!-- libraries -->
+    <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/dompurify/dist/purify.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/mermaid/dist/mermaid.min.js"></script>
+
+    <!-- sidebar/session manager first -->
+    <script src="/static/js/chat_sessions.js?v=3"></script>
+    <!-- chat logic last -->
+    <script src="/static/js/chat.js?v=compose9"></script>
+    <script>
+      if (window.mermaid) { mermaid.initialize({ startOnLoad: false }); }
+    </script>
+
+    <!-- LLM-COMPOSE: END -->
+</body>
+</html>

@@ -1,0 +1,5 @@
+Output HTML ONLY (no Markdown/comments).
+Input JSON: {"ordered":bool,"count":int,"topic":""}
+If topic is non-empty -> emit <h3>topic</h3>; else no <h3>.
+Then emit <ol> if ordered else <ul> with exactly count <li> items (“Item 1”…).
+Return only the HTML fragment.

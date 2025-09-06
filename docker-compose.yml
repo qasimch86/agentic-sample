@@ -1,0 +1,14 @@
+# >>> LLM-COMPOSE: START
+version: '3.8'
+services:
+  aichatbotpro:
+    build: .
+    container_name: aichatbotpro_app
+    ports:
+      - "8001:8001"
+    environment:
+      - FLASK_ENV=production
+    volumes:
+      - .:/app
+    command: python app.py
+# >>> LLM-COMPOSE: END
