@@ -82,6 +82,9 @@ function setInitialLogoState() {
     }
 }
 
+// Expose globally
+window.setInitialLogoState = setInitialLogoState;
+
 function toggleDarkMode() {
     const body = document.body;
     const header = document.querySelector('header');
@@ -93,6 +96,18 @@ function toggleDarkMode() {
     const recentChatsItems = document.querySelectorAll('.recent-chats li');
     const lightLogo = document.querySelector('.light-logo');
     const darkLogo = document.querySelector('.dark-logo');
+
+    console.log('toggleDarkMode called');
+    console.log('body:', body);
+    console.log('header:', header);
+    console.log('recentChats:', recentChats);
+    console.log('chatArea:', chatArea);
+    console.log('rightSidebar:', rightSidebar);
+    console.log('fileList:', fileList);
+    console.log('attachedFileDiv:', attachedFileDiv);
+    console.log('recentChatsItems:', recentChatsItems);
+    console.log('lightLogo:', lightLogo);
+    console.log('darkLogo:', darkLogo);
 
     body.classList.toggle('dark-mode');
     body.classList.toggle('light-mode');
@@ -124,6 +139,9 @@ function toggleDarkMode() {
     }
 }
 
+// Expose globally
+window.toggleDarkMode = toggleDarkMode;
+
 document.addEventListener('DOMContentLoaded', () => {
     const textarea = document.getElementById('chat-textarea');
     const charCounter = document.getElementById('char-counter');
@@ -149,5 +167,12 @@ document.addEventListener('DOMContentLoaded', () => {
     const attachFileInput = document.getElementById('attach-file');
     if (attachFileInput) {
         removeAttachedFile();
+    }
+});
+// Add event listener for dark mode toggle button
+document.addEventListener('DOMContentLoaded', () => {
+    const toggleBtn = document.getElementById('toggle-dark-btn');
+    if (toggleBtn) {
+        toggleBtn.addEventListener('click', toggleDarkMode);
     }
 });
