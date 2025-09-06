@@ -28,5 +28,5 @@ jobs:
           port: 2222
           script: |
             cd /home/appuser/agentic-sample
-            docker-compose down
-            docker-compose up -d --build
+            docker compose down
+            docker compose up -d --build
