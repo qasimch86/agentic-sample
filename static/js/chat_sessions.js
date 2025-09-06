@@ -1,195 +1,229 @@
 // static/js/chat_sessions.js
-// Purpose: manage recent chats sidebar + localStorage only.
-// IMPORTANT: This file does NOT talk to the backend and does NOT handle sending.
-// The compose/chat pipeline lives in static/js/chat.js.
+// Manages recent chats + message storage (localStorage) and renders the chat box.
 
-const CHAT_STORAGE_KEY = 'recentChats';
-const CHAT_MSG_KEY_PREFIX = 'chatSession_';
-let currentSessionId = null;
+(function () {
+  const CHAT_STORAGE_KEY = 'recentChats';
+  const CHAT_MSG_KEY_PREFIX = 'chatSession_';
+  let currentSessionId = null;
 
-// ---- Utils ----
-function _listEl() {
-  // Try several selectors so it works with your component layout
-  return document.querySelector('#chat-list, #recent-chats ul, .recent-chats ul');
-}
-function _chatBoxEl() {
-  return document.querySelector('.chat-area .chat-box');
-}
+  // ---------- storage helpers ----------
+  const getChats = () => JSON.parse(localStorage.getItem(CHAT_STORAGE_KEY) || '[]');
+  const saveChats = (chats) => localStorage.setItem(CHAT_STORAGE_KEY, JSON.stringify(chats));
+  const getMsgs = (sid) => JSON.parse(localStorage.getItem(CHAT_MSG_KEY_PREFIX + sid) || '[]');
+  const saveMsgs = (sid, msgs) => localStorage.setItem(CHAT_MSG_KEY_PREFIX + sid, JSON.stringify(msgs));
 
-// ---- Sidebar load/render ----
-function loadChats() {
-  const ul = _listEl();
-  if (!ul) {
-    console.warn('chat_sessions: chat list container not found yet.');
-    return;
+  // Ensure at least one chat exists on first run
+  function ensureFirstChat() {
+    let chats = getChats();
+    if (!Array.isArray(chats) || chats.length === 0) {
+      const sessionId = 'chat_' + Date.now() + '_' + Math.floor(Math.random() * 10000);
+      chats = [{ name: 'New chat', sessionId }];
+      saveChats(chats);
+      saveMsgs(sessionId, []);
+      currentSessionId = sessionId;
+    }
+    if (!currentSessionId) currentSessionId = chats[0].sessionId;
   }
-  ul.innerHTML = '';
 
-  const chats = JSON.parse(localStorage.getItem(CHAT_STORAGE_KEY) || '[]');
-  chats.forEach((chat, idx) => {
-    const li = document.createElement('li');
-
-    // Preview: first two words of first user message
-    const msgs = JSON.parse(localStorage.getItem(CHAT_MSG_KEY_PREFIX + chat.sessionId) || '[]');
-    let fallbackPreview = '';
-    for (let m of msgs) {
-      if (m.role === 'user' && m.content) {
-        const words = String(m.content).split(/\s+/);
-        fallbackPreview = words.slice(0, 2).join(' ');
-        if (words.length > 2) fallbackPreview += '...';
-        break;
+  // ---------- DOM helpers ----------
+  function chatListContainer() {
+    const container = document.getElementById('recent-chats') || document.querySelector('.recent-chats');
+    if (!container) return null;
+    let ul = container.querySelector('#chat-list');
+    if (!ul) {
+      ul = container.querySelector('ul');
+      if (!ul) {
+        ul = document.createElement('ul');
+        ul.id = 'chat-list';
+        container.appendChild(ul);
+      } else {
+        ul.id = 'chat-list';
       }
     }
-
-    // Use stored topic name if present
-    let displayName = (chat.name && chat.name.trim()) ? chat.name : fallbackPreview || `Chat ${idx+1}`;
-    let shownName = displayName.length > 28 ? displayName.slice(0, 25) + '...' : displayName;
-
-    li.innerHTML = `<span class="chat-name">${shownName}</span>`;
-    li.setAttribute('title', displayName);
-    li.dataset.sessionId = chat.sessionId;
-    if (chat.sessionId === currentSessionId) li.classList.add('active-chat');
-
-    const delBtn = document.createElement('button');
-    delBtn.className = 'delete-chat-btn';
-    delBtn.title = 'Delete chat';
-    delBtn.textContent = '×';
-    delBtn.onclick = function (e) {
-      e.stopPropagation();
-      deleteChat(chat.sessionId);
-    };
-    li.appendChild(delBtn);
-
-    li.onclick = function () {
-      selectChat(chat.sessionId);
-    };
-
-    ul.appendChild(li);
-  });
-}
-
-function saveChats(chats) {
-  localStorage.setItem(CHAT_STORAGE_KEY, JSON.stringify(chats));
-}
-
-// ---- Session CRUD ----
-function addChat() {
-  const chats = JSON.parse(localStorage.getItem(CHAT_STORAGE_KEY) || '[]');
-  const sessionId = 'chat_' + Date.now() + '_' + Math.floor(Math.random() * 10000);
-  chats.push({ name: '', sessionId });
-  saveChats(chats);
-  localStorage.setItem(CHAT_MSG_KEY_PREFIX + sessionId, JSON.stringify([]));
-  selectChat(sessionId);
-}
-
-function deleteChat(sessionId) {
-  let chats = JSON.parse(localStorage.getItem(CHAT_STORAGE_KEY) || '[]');
-  chats = chats.filter(chat => chat.sessionId !== sessionId);
-  saveChats(chats);
-  localStorage.removeItem(CHAT_MSG_KEY_PREFIX + sessionId);
-  if (currentSessionId === sessionId) {
-    currentSessionId = null;
-    clearChatBox();
-    if (chats.length) selectChat(chats[0].sessionId);
-    else loadChats();
-  } else {
-    loadChats();
+    return ul;
   }
-}
 
-function selectChat(sessionId) {
-  currentSessionId = sessionId;
-  loadChats();
-  renderChatBox();
-}
+  function chatBoxEl() {
+    return document.querySelector('.chat-area .chat-box');
+  }
 
-// ---- Chat area (render from localStorage ONLY, no backend calls here) ----
-function renderChatBox() {
-  const chatBox = _chatBoxEl();
-  if (!chatBox) return;
-  chatBox.innerHTML = '';
+  // ---------- UI renderers ----------
+  function loadChats() {
+    const ul = chatListContainer();
+    if (!ul) return; // sidebar not mounted yet
+    const chats = getChats();
+    ul.innerHTML = '';
+    chats.forEach((chat, idx) => {
+      const li = document.createElement('li');
+      // derive a short preview from the first user message
+      const msgs = getMsgs(chat.sessionId);
+      let preview = '';
+      for (const m of msgs) {
+        if (m.role === 'user' && m.content) {
+          const words = String(m.content).trim().split(/\s+/);
+          preview = words.slice(0, 2).join(' ') + (words.length > 2 ? '…' : '');
+          break;
+        }
+      }
+      const displayName = (chat.name && chat.name.trim()) || preview || `Chat ${idx + 1}`;
+      const shownName = displayName.length > 28 ? displayName.slice(0, 25) + '…' : displayName;
 
-  if (!currentSessionId) return;
-  const msgs = JSON.parse(localStorage.getItem(CHAT_MSG_KEY_PREFIX + currentSessionId) || '[]');
-  msgs.forEach(m => {
-    const card = document.createElement('div');
-    card.className = 'chat-card ' + (m.role === 'user' ? 'user-card' : 'bot-card');
-    const header = `<div class="chat-header">${m.role === 'user' ? 'User' : 'Bot'}</div>`;
-    // NOTE: Bot messages may contain HTML from /api/compose; do not escape them.
-    const body = (m.role === 'bot_html')
-      ? m.content
-      : `<p>${escapeHtml(m.content)}</p>`;
-    card.innerHTML = header + body;
-    chatBox.appendChild(card);
-  });
-  chatBox.scrollTop = chatBox.scrollHeight;
-}
+      li.className = (chat.sessionId === currentSessionId) ? 'active-chat' : '';
+      li.dataset.sessionId = chat.sessionId;
+      li.innerHTML = `<span class="chat-name">${shownName}</span>`;
 
-function clearChatBox() {
-  const chatBox = _chatBoxEl();
-  if (chatBox) chatBox.innerHTML = '';
-}
+      // delete button (optional)
+      const delBtn = document.createElement('button');
+      delBtn.className = 'delete-chat-btn';
+      delBtn.title = 'Delete chat';
+      delBtn.textContent = '×';
+      delBtn.addEventListener('click', (e) => {
+        e.stopPropagation();
+        deleteChat(chat.sessionId);
+      });
+      li.appendChild(delBtn);
 
-function escapeHtml(s) {
-  return String(s).replace(/[&<>"']/g, function (m) {
-    return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[m];
-  });
-}
+      li.addEventListener('click', () => selectChat(chat.sessionId));
+      ul.appendChild(li);
+    });
+  }
 
-// ---- Public helpers used from chat.js ----
-function pushMessage(role, content, { html = false } = {}) {
-  if (!currentSessionId) return;
-  const key = CHAT_MSG_KEY_PREFIX + currentSessionId;
-  const msgs = JSON.parse(localStorage.getItem(key) || '[]');
-  msgs.push({ role: html ? 'bot_html' : role, content });
-  localStorage.setItem(key, JSON.stringify(msgs));
-  renderChatBox();
-  loadChats();
-}
+  function escapeHtml(s) {
+    return String(s).replace(/[&<>"']/g, (m) => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m]));
+  }
 
-function setChatName(name) {
-  if (!currentSessionId) return;
-  const chats = JSON.parse(localStorage.getItem(CHAT_STORAGE_KEY) || '[]');
-  const idx = chats.findIndex(c => c.sessionId === currentSessionId);
-  if (idx !== -1) {
-    chats[idx].name = name;
+  function renderMessageContent(msg) {
+    // If bot content marked as HTML, sanitize & return as HTML
+    if (msg.role === 'bot' && msg.html) {
+      let html = String(msg.content || '');
+      if (window.DOMPurify) {
+        html = DOMPurify.sanitize(html, { USE_PROFILES: { html: true } });
+      }
+      return { html: true, body: html };
+    }
+    // Otherwise: Markdown if available, else plain text
+    if (window.marked) {
+      const safe = String(msg.content || '');
+      const body = marked.parse(safe, { breaks: true, gfm: true });
+      return { html: true, body };
+    }
+    return { html: false, body: escapeHtml(msg.content || '') };
+  }
+
+  async function renderChatBox() {
+    const box = chatBoxEl();
+    if (!box || !currentSessionId) return;
+    const msgs = getMsgs(currentSessionId);
+    box.innerHTML = '';
+    for (const m of msgs) {
+      const card = document.createElement('div');
+      card.className = 'chat-card ' + (m.role === 'user' ? 'user-card' : 'bot-card');
+      const rendered = renderMessageContent(m);
+      if (rendered.html) {
+        card.innerHTML = `<div class="chat-header">${m.role === 'user' ? 'User' : 'Bot'}</div>${rendered.body}`;
+      } else {
+        card.innerHTML = `<div class="chat-header">${m.role === 'user' ? 'User' : 'Bot'}</div><p>${rendered.body}</p>`;
+      }
+      box.appendChild(card);
+    }
+    // Mermaid & KaTeX pass (optional)
+    if (window.mermaid) {
+      const codes = box.querySelectorAll('div.mermaid, code.language-mermaid, pre code.language-mermaid');
+      for (const node of codes) {
+        const src = node.textContent;
+        const mount = document.createElement('div');
+        const pre = node.closest('pre');
+        (pre ? pre : node).replaceWith(mount);
+        try {
+          const { svg } = await mermaid.render('mmd-' + Math.random().toString(36).slice(2), src);
+          mount.innerHTML = svg;
+        } catch {
+          mount.textContent = 'Mermaid parse error';
+        }
+      }
+    }
+    if (typeof renderMathInElement === 'function') {
+      renderMathInElement(box, {
+        delimiters: [
+          { left: '$$', right: '$$', display: true },
+          { left: '$', right: '$', display: false }
+        ]
+      });
+    }
+    box.scrollTop = box.scrollHeight;
+  }
+
+  // ---------- actions ----------
+  function addChat(name = 'New chat') {
+    const chats = getChats();
+    const sessionId = 'chat_' + Date.now() + '_' + Math.floor(Math.random() * 10000);
+    chats.push({ name, sessionId });
     saveChats(chats);
+    saveMsgs(sessionId, []);
+    currentSessionId = sessionId;
     loadChats();
+    renderChatBox();
+    return sessionId;
   }
-}
 
-function initChatSessionEvents() {
-  // Only bind "add chat" here. DO NOT attach send button or call backend from this file.
-  const addChatBtn = document.getElementById('add-chat-btn');
-  if (addChatBtn) addChatBtn.addEventListener('click', addChat);
-}
-
-// ---- Bootstrap ----
-document.addEventListener('DOMContentLoaded', function () {
-  // Wait for components to load (recent-chats might be injected later)
-  const tryInit = () => {
+  function deleteChat(sessionId) {
+    let chats = getChats().filter(c => c.sessionId !== sessionId);
+    saveChats(chats);
+    localStorage.removeItem(CHAT_MSG_KEY_PREFIX + sessionId);
+    if (currentSessionId === sessionId) {
+      if (chats.length) currentSessionId = chats[0].sessionId;
+      else {
+        // Create a new one so UI is never empty
+        ensureFirstChat();
+      }
+    }
     loadChats();
-    const chats = JSON.parse(localStorage.getItem(CHAT_STORAGE_KEY) || '[]');
-    if (!currentSessionId && chats.length) selectChat(chats[0].sessionId);
-    initChatSessionEvents();
+    renderChatBox();
+  }
+
+  function selectChat(sessionId) {
+    currentSessionId = sessionId;
+    loadChats();
+    renderChatBox();
+  }
+
+  // Public API for other scripts (e.g., chat.js)
+  window.chatSessions = {
+    addChat,
+    selectChat,
+    getCurrentSessionId: () => currentSessionId,
+    pushMessage(role, content, opts = {}) {
+      ensureFirstChat();
+      const sid = currentSessionId;
+      const msgs = getMsgs(sid);
+      msgs.push({ role, content, html: !!opts.html });
+      saveMsgs(sid, msgs);
+      // If first user message, optionally set a better chat name later (left simple here)
+      renderChatBox();
+      loadChats();
+    }
   };
 
-  // If the list isn't present yet, observe until it is.
-  if (_listEl()) {
-    tryInit();
-  } else {
-    const obs = new MutationObserver(() => {
-      if (_listEl()) {
-        tryInit();
-        obs.disconnect();
-      }
-    });
-    obs.observe(document.body, { childList: true, subtree: true });
-  }
-});
+  // ---------- bootstrap ----------
+  document.addEventListener('DOMContentLoaded', () => {
+    // Wait for components to mount (sidebar + chat area) then boot
+    let tries = 0;
+    const t = setInterval(() => {
+      const ready = chatListContainer() && chatBoxEl();
+      if (ready) {
+        clearInterval(t);
+        ensureFirstChat();
+        loadChats();
+        renderChatBox();
 
-// Expose helpers for chat.js
-window.chatSessions = {
-  addChat, deleteChat, selectChat, loadChats,
-  pushMessage, setChatName
-};
+        // Hook "Add chat" button if present
+        const addBtn = document.getElementById('add-chat-btn');
+        if (addBtn) addBtn.addEventListener('click', () => addChat());
+      } else if (++tries > 100) {
+        clearInterval(t);
+        // Still ensure storage has a chat for future renders
+        ensureFirstChat();
+      }
+    }, 100);
+  });
+})();
