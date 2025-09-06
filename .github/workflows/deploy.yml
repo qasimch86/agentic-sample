@@ -19,6 +19,18 @@ jobs:
           port: 2222
           source: .
           target: /home/appuser/agentic-sample
+
+      - name: Create .env file from secrets on server
+        uses: appleboy/ssh-action@v0.1.10
+        with:
+          host: ${{ secrets.SERVER_IP }}
+          username: ${{ secrets.SERVER_USER }}
+          key: ${{ secrets.SERVER_SSH_KEY }}
+          port: 2222
+          script: |
+            cd /home/appuser/agentic-sample
+            echo "OPENAI_API_KEY=${{ secrets.OPENAI_API_KEY }}" > .env
+
       - name: Deploy with Docker Compose
         uses: appleboy/ssh-action@v0.1.10
         with:
